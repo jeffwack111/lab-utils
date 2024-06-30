@@ -52,8 +52,8 @@ def standard_MultiInstrument(IP):
 
     dfb.enable_output(1,True,True)
 
-    llb.set_demodulation(mode="Modulation",frequency=50.6e6,phase=54)
-    llb.set_aux_oscillator(enable = True,frequency=50.6e6,amplitude=2,output = "OutputB")
+    llb.set_demodulation(mode="Modulation",frequency=51e6,phase=54)
+    llb.set_aux_oscillator(enable = True,frequency=51e6,amplitude=2,output = "OutputB")
     llb.set_output(2, signal=False, output=True)
 
     llb.set_output_offset(1, offset=0.0)

@@ -6,6 +6,6 @@ MIM = MultiInstrument('192.168.50.57', force_connect=True, platform_id=4) #192.1
 
 daemon = Pyro5.server.Daemon(host="localhost")
 ns = Pyro5.core.locate_ns()
-uri = daemon.register(MIM)
+uri = daemon.register(MIM) 
 ns.register("MokuMIM",uri)
 daemon.requestLoop()

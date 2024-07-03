@@ -1,15 +1,43 @@
 import numpy as np
 from wield.control import SISO
-from moku.instruments import MultiInstrument, LaserLockBox, DigitalFilterBox, FrequencyResponseAnalyzer, SpectrumAnalyzer
+import Pyro5.server
+import Pyro5.client
+from moku.instruments import *
 
-def standard_MultiInstrument(IP):
-    MIM = MultiInstrument(IP, force_connect=True, platform_id=4)
+exposed_MultiInstrument = Pyro5.server.expose(MultiInstrument)
+
+def serve_MultiInstrument(IP,MIM_name,instrument_classes,instrument_names):
+    MIM = exposed_MultiInstrument(IP, force_connect=True, platform_id=4)
+
+    instruments=[]
+
+    for idx,inst in enumerate(instrument_classes):
+        print(idx)
+        instruments.append(MIM.set_instrument(idx+1,Pyro5.server.expose(inst)))
+
+    dictionary = dict(zip(instruments,instrument_names))
+    dictionary.update({MIM:MIM_name})
+
+    Pyro5.server.serve(
+        dictionary,
+    use_ns=True, verbose=True, host="gouyvm")   
+
+
+def standard_MultiInstrument(moku_number):
+
+    IPdict = dict([(1 , "192.168.50.97"),(3 , "192.168.50.57"), (4, "192.168.50.57")])
 
     print("creating instruments")
-    llb = MIM.set_instrument(1, LaserLockBox)
-    fra = MIM.set_instrument(2, FrequencyResponseAnalyzer)
-    dfb = MIM.set_instrument(3, DigitalFilterBox)
-    spa = MIM.set_instrument(4, SpectrumAnalyzer)
+    try:
+        serve_MultiInstrument(IPdict[moku_number],f"MIM{moku_number}",[LaserLockBox,FrequencyResponseAnalyzer,DigitalFilterBox,SpectrumAnalyzer],[f"llb{moku_number}",f"fra{moku_number}",f"dfb{moku_number}",f"spa{moku_number}"])
+    except:
+        print("not the number of a moku pro")
+
+    MIM = Pyro5.client.Proxy(f"PYRONAME:MIM{moku_number}")
+    llb = Pyro5.client.Proxy(f"PYRONAME:llb{moku_number}")
+    fra = Pyro5.client.Proxy(f"PYRONAME:fra{moku_number}")
+    dfb = Pyro5.client.Proxy(f"PYRONAME:dfb{moku_number}")
+    spa = Pyro5.client.Proxy(f"PYRONAME:spa{moku_number}")
 
     print("connecting instruments")
     connections = [dict(source="Input1", destination="Slot1InA"), # REFL PD to demodulation in laser lock box

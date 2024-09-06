@@ -2,7 +2,7 @@ import Pyro5.client
 import subprocess
 from time import sleep
 
-moku_number = 3
+moku_number = 2
 
 #start nameserver
 devnull = subprocess.DEVNULL

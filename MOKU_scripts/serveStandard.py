@@ -1,5 +1,5 @@
 import numpy as np
-from wield.control import SISO
+import sys
 import Pyro5.server
 import Pyro5.client
 from moku.instruments import *
@@ -92,31 +92,8 @@ def standard_MultiInstrument(moku_number):
 
     return MIM, llb, fra, dfb, spa
 
-
-def set_controller(MokuLaserLockBox,prop_gain_dB,int_crossover_Hz,int_saturation_dB):
-    MokuLaserLockBox.set_pid_by_frequency(channel=1,  int_crossover = int_crossover_Hz, int_saturation = int_saturation_dB,prop_gain = prop_gain_dB, diff_crossover = None,diff_saturation =None, double_int_crossover = None,invert=True)
-    return PIS_controller(prop_gain_dB,int_crossover_Hz,int_saturation_dB)
-
-def PIS_controller(prop_gain_dB,int_crossover_Hz,int_saturation_dB):
-    int_crossover = int_crossover_Hz*2*np.pi #convert from hz to rad/s
-    int_saturation_mag = 10**(int_saturation_dB/20)
-    prop_gain_mag = 10**(prop_gain_dB/20)
-    return SISO.zpk([-int_crossover],[-int_crossover*prop_gain_mag/int_saturation_mag],prop_gain_mag)
-
-def aquire_lock(MokuLaserLockBox):
-    scan_freq = 10
-    scan_amp = 1
-    MokuLaserLockBox.set_scan_oscillator(enable=True,amplitude = scan_amp, frequency = scan_freq, output ="OutputA",shape =  "Triangle")
-    MokuLaserLockBox.set_output(1, signal=False, output=True)
-    MokuLaserLockBox.set_timebase(0.0,1/(4*scan_freq))
-    data = MokuLaserLockBox.get_data(wait_complete=True)
-    t = np.array(data['time'])
-    err = np.array(data['ch1'])
-    trans = np.array(data['ch2'])
-    med_err = np.median(err)
-    t_res = t[np.argmax(trans)]
-    V_res = scan_amp*t_res*4*scan_freq
-    MokuLaserLockBox.set_setpoint(-med_err)
-    MokuLaserLockBox.set_output_offset(1,offset=V_res)
-    MokuLaserLockBox.set_scan_oscillator(enable=False,amplitude = scan_amp, frequency = scan_freq, output ="OutputA",shape =  "Triangle")
-    MokuLaserLockBox.set_output(1, signal=True, output=True)
+if __name__ == "__main__":
+    args = sys.argv[1:]
+    idx = args[0]
+    print(f"creating multi-instrument on Moku {idx}")
+    standard_MultiInstrument(idx)
